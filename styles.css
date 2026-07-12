@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap');
+
+:root {
+    color-scheme: dark;
+    --bg: #090b09;
+    --panel: #0f120f;
+    --panel-border: #283228;
+    --text: #d7e0d2;
+    --muted: #8b9586;
+    --accent: #9db38f;
+    --accent-strong: #c2d3b7;
+    --danger: #7f8d78;
+    --cursor: #d7e0d2;
+}
+
+body {
+    font-family: 'IBM Plex Mono', monospace;
+    max-width: 760px;
+    margin: 32px auto;
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at top, rgba(157, 179, 143, 0.08), transparent 42%),
+        var(--bg);
+    color: var(--text);
+    padding: 0 16px;
+}
+
+.app {
+    display: block;
+    border: 1px solid var(--panel-border);
+    background: rgba(15, 18, 15, 0.92);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 50px rgba(0, 0, 0, 0.45);
+    padding: 18px 18px 22px;
+}
+
+h1 {
+    margin: 0 0 14px;
+    font-family: 'VT323', monospace;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--accent-strong);
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 10px;
+}
+
+h1::before {
+    content: '[ tty ] ';
+    color: var(--muted);
+}
+
+.task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 10px;
+    margin: 0;
+    border-bottom: 1px dotted rgba(155, 179, 143, 0.22);
+    gap: 12px;
+    line-height: 1.4;
+}
+
+.task-item.done {
+    opacity: 0.72;
+}
+
+.task-text {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.id {
+    color: var(--accent);
+    text-decoration: none;
+    flex: 0 0 auto;
+}
+
+.id::before {
+    content: '>'; 
+    margin-right: 2px;
+    color: var(--muted);
+}
+
+.desc {
+    min-width: 0;
+    word-break: break-word;
+}
+
+.meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+.meta::before {
+    content: '[';
+}
+
+.meta::after {
+    content: ']';
+}
+
+.task-item.done .desc::before {
+    content: '[x] ';
+    color: var(--muted);
+}
+
+.task-item:not(.done) .desc::before {
+    content: '[ ] ';
+    color: var(--muted);
+}
+
+.empty {
+    color: var(--muted);
+    font-style: italic;
+}
+
+.empty::before {
+    content: ':: '; 
+    color: var(--accent);
+}
+
+@media (max-width: 520px) {
+    body {
+        margin: 18px auto;
+    }
+
+    .app {
+        padding: 14px 14px 18px;
+    }
+
+    .task-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .meta {
+        white-space: normal;
+    }
+}
