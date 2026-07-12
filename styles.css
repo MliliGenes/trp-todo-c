@@ -1,26 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap');
-
 :root {
     color-scheme: dark;
-    --bg: #090b09;
-    --panel: #0f120f;
-    --panel-border: #283228;
-    --text: #d7e0d2;
-    --muted: #8b9586;
-    --accent: #9db38f;
-    --accent-strong: #c2d3b7;
-    --danger: #7f8d78;
-    --cursor: #d7e0d2;
+    --bg: #080808;
+    --panel: #111111;
+    --panel-border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #a0a0a0;
+    --accent: #d6d6d6;
+    --accent-strong: #ffffff;
+    --shadow: rgba(0, 0, 0, 0.55);
 }
 
 body {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Courier New', Courier, monospace;
     max-width: 760px;
     margin: 32px auto;
-    background:
-        linear-gradient(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02)),
-        radial-gradient(circle at top, rgba(157, 179, 143, 0.08), transparent 42%),
-        var(--bg);
+    background: var(--bg);
     color: var(--text);
     padding: 0 16px;
 }
@@ -28,17 +22,17 @@ body {
 .app {
     display: block;
     border: 1px solid var(--panel-border);
-    background: rgba(15, 18, 15, 0.92);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 50px rgba(0, 0, 0, 0.45);
+    background: rgba(17, 17, 17, 0.92);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 50px var(--shadow);
     padding: 18px 18px 22px;
 }
 
 h1 {
     margin: 0 0 14px;
-    font-family: 'VT323', monospace;
+    font-family: inherit;
     font-size: 2rem;
-    font-weight: 400;
-    letter-spacing: 0.08em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     color: var(--accent-strong);
     border-bottom: 1px solid var(--panel-border);
     padding-bottom: 10px;
@@ -61,7 +55,7 @@ h1::before {
     align-items: center;
     padding: 9px 10px;
     margin: 0;
-    border-bottom: 1px dotted rgba(155, 179, 143, 0.22);
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.18);
     gap: 12px;
     line-height: 1.4;
 }
