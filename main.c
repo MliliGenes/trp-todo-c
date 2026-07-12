@@ -44,6 +44,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <stdatomic.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -118,6 +120,7 @@ static int send_all(int fd, const char *buf, size_t len);
 static void handle_client(int client_fd, TaskList *list);
 static void *server_thread_main(void *arg);
 static int server_start(TaskList *list, int port);
+static void server_stop(void);
 
 /* ================= Linked list layer ================= */
 
@@ -651,7 +654,13 @@ static void handle_client(int client_fd, TaskList *list) {
 typedef struct ServerContext {
     TaskList *list;
     int port;
+    int server_fd;
 } ServerContext;
+
+static ServerContext g_server_ctx;
+static pthread_t g_server_thread;
+static _Atomic int g_server_running = 0;
+static _Atomic int g_server_started = 0;
 
 static void *server_thread_main(void *arg) {
     ServerContext *ctx = (ServerContext *)arg;
@@ -661,6 +670,8 @@ static void *server_thread_main(void *arg) {
         perror("[server] socket");
         return NULL;
     }
+
+    ctx->server_fd = server_fd;
 
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -680,41 +691,76 @@ static void *server_thread_main(void *arg) {
     if (listen(server_fd, SERVER_BACKLOG) < 0) {
         perror("[server] listen");
         close(server_fd);
+        ctx->server_fd = -1;
         return NULL;
     }
 
     printf("[server] listening on http://localhost:%d\n", ctx->port);
 
-    while (1) {
+    while (g_server_running) {
+        fd_set read_fds;
+        FD_ZERO(&read_fds);
+        FD_SET(server_fd, &read_fds);
+
+        struct timeval timeout;
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
+
+        int ready = select(server_fd + 1, &read_fds, NULL, NULL, &timeout);
+        if (!g_server_running)
+            break;
+
+        if (ready < 0) {
+            if (errno == EINTR)
+                continue;
+            perror("[server] select");
+            continue;
+        }
+
+        if (ready == 0)
+            continue;
+
         int client_fd = accept(server_fd, NULL, NULL);
         if (client_fd < 0) {
             if (errno == EINTR)
                 continue;
+            if (!g_server_running)
+                break;
             perror("[server] accept");
             continue;
         }
         handle_client(client_fd, ctx->list);
     }
 
-    close(server_fd); /* unreachable: accept loop runs until the process exits */
+    close(server_fd);
+    ctx->server_fd = -1;
     return NULL;
 }
 
-/* Spins up the HTTP server on a detached background thread. Fire and
- * forget: the thread runs until the process exits, no shutdown path
- * needed since it holds no resources that outlive the process. */
+/* Spins up the HTTP server on a background thread so main can stop it
+ * cleanly before freeing the shared task list and database. */
 static int server_start(TaskList *list, int port) {
-    static ServerContext ctx; /* static: must outlive this function call */
-    ctx.list = list;
-    ctx.port = port;
+    g_server_ctx.list = list;
+    g_server_ctx.port = port;
+    g_server_ctx.server_fd = -1;
+    g_server_running = 1;
 
-    pthread_t tid;
-    if (pthread_create(&tid, NULL, server_thread_main, &ctx) != 0) {
+    if (pthread_create(&g_server_thread, NULL, server_thread_main, &g_server_ctx) != 0) {
         fprintf(stderr, "Failed to start server thread.\n");
+        g_server_running = 0;
         return -1;
     }
-    pthread_detach(tid);
+    g_server_started = 1;
     return 0;
+}
+
+static void server_stop(void) {
+    if (!g_server_started)
+        return;
+
+    g_server_running = 0;
+    pthread_join(g_server_thread, NULL);
+    g_server_started = 0;
 }
 
 /* ================= Main loop ================= */
@@ -782,6 +828,7 @@ int main(int argc, char **argv) {
         free(line);
     }
 
+    server_stop();
     list_free(list);
     db_close(db);
     printf("Goodbye.\n");
